@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import type { ContractMode, Contract, Approval } from '../App';
+import type { ContractMode, Contract, Approval } from '../page';
 
 interface CreateContractProps {
     mode: ContractMode;

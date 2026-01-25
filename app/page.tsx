@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { CreateContract } from './components/CreateContract';
@@ -34,7 +36,7 @@ export interface BlockchainLog {
     timestamp: Date;
 }
 
-function App() {
+export default function Home() {
     const [currentMode, setCurrentMode] = useState<ContractMode>('onchain');
     const [currentView, setCurrentView] = useState<'list' | 'create' | 'detail'>('list');
     const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
@@ -222,5 +224,3 @@ function App() {
         </div>
     );
 }
-
-export default App;

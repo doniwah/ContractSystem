@@ -1,5 +1,6 @@
 import { ArrowLeft, CheckCircle, Clock, Users, Target, Activity } from 'lucide-react';
-import type { Contract, Approval, BlockchainLog } from '../App';
+import { format } from "date-fns";
+import type { Contract, Approval, BlockchainLog } from '../page';
 
 interface ContractDetailProps {
     contract: Contract;
@@ -78,7 +79,7 @@ export function ContractDetail({
                                 </div>
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Created</label>
-                                    <p className="mt-1 text-sm text-gray-900">{contract.createdAt.toLocaleDateString()}</p>
+                                    <p className="mt-1 text-sm text-gray-900">{format(contract.createdAt, "PPP")}</p>
                                 </div>
                             </div>
                         </div>
@@ -141,7 +142,7 @@ export function ContractDetail({
                                             <p className="text-sm font-medium text-gray-900">{approval.userName}</p>
                                             {approval.timestamp && (
                                                 <p className="text-xs text-gray-500">
-                                                    Approved on {approval.timestamp.toLocaleDateString()}
+                                                    Approved on {format(approval.timestamp, "PPP")}
                                                 </p>
                                             )}
                                         </div>
@@ -216,7 +217,7 @@ export function ContractDetail({
                                         <div className="flex-1 min-w-0">
                                             <p className="text-xs font-medium text-gray-900 capitalize">{log.action}</p>
                                             <p className="text-xs text-gray-500 mt-0.5">
-                                                {log.timestamp.toLocaleString()}
+                                                {format(log.timestamp, "PP pp")}
                                             </p>
                                             {contract.mode === 'onchain' && (
                                                 <p className="text-xs text-gray-400 mt-1 font-mono truncate">

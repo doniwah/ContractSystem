@@ -1,5 +1,5 @@
 import { FileText, ListChecks } from 'lucide-react';
-import type { ContractMode } from '../App';
+import type { ContractMode } from '../page';
 
 interface SidebarProps {
     currentMode: ContractMode;
@@ -31,8 +31,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                     <button
                         onClick={() => handleModeChange('onchain')}
                         className={`w-full text-left px-3 py-2 rounded-md mb-2 transition-colors ${currentMode === 'onchain'
-                                ? 'bg-blue-50 text-blue-700 font-medium'
-                                : 'text-gray-700 hover:bg-gray-50'
+                            ? 'bg-blue-50 text-blue-700 font-medium'
+                            : 'text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         On Chain
@@ -42,8 +42,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                             <button
                                 onClick={() => handleMenuClick('create')}
                                 className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${currentView === 'create'
-                                        ? 'bg-blue-50 text-blue-700'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-blue-50 text-blue-700'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <FileText size={16} />
@@ -52,8 +52,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                             <button
                                 onClick={() => handleMenuClick('list')}
                                 className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${currentView === 'list' || currentView === 'detail'
-                                        ? 'bg-blue-50 text-blue-700'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-blue-50 text-blue-700'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <ListChecks size={16} />
@@ -68,8 +68,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                     <button
                         onClick={() => handleModeChange('offchain')}
                         className={`w-full text-left px-3 py-2 rounded-md mb-2 transition-colors ${currentMode === 'offchain'
-                                ? 'bg-green-50 text-green-700 font-medium'
-                                : 'text-gray-700 hover:bg-gray-50'
+                            ? 'bg-green-50 text-green-700 font-medium'
+                            : 'text-gray-700 hover:bg-gray-50'
                             }`}
                     >
                         Off Chain
@@ -79,8 +79,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                             <button
                                 onClick={() => handleMenuClick('create')}
                                 className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${currentView === 'create'
-                                        ? 'bg-green-50 text-green-700'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-green-50 text-green-700'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <FileText size={16} />
@@ -89,8 +89,8 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange }
                             <button
                                 onClick={() => handleMenuClick('list')}
                                 className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 transition-colors ${currentView === 'list' || currentView === 'detail'
-                                        ? 'bg-green-50 text-green-700'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-green-50 text-green-700'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <ListChecks size={16} />

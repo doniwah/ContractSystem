@@ -1,5 +1,6 @@
 import { Eye, CheckCircle, Clock } from 'lucide-react';
-import type { Contract, Approval } from '../App';
+import { format } from "date-fns";
+import type { Contract, Approval } from '../page';
 
 interface ContractListProps {
     contracts: Contract[];
@@ -96,7 +97,7 @@ export function ContractList({ contracts, approvals, onViewContract }: ContractL
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-500">
-                                            {contract.createdAt.toLocaleDateString()}
+                                            {format(contract.createdAt, "PPP")}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
