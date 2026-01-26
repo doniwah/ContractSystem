@@ -1,30 +1,64 @@
-import { ArrowLeft, CheckCircle, Clock, Users, Target, Activity } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, CheckCircle, Clock, Users, Target, Activity, FileText, Loader2 } from 'lucide-react';
 import { format } from "date-fns";
-import type { Contract, Approval, BlockchainLog } from '../page';
+import { JsonRpcSigner } from 'ethers';
+import type { Contract, Approval, BlockchainLog } from '../types';
+import { getDocumentUrl } from '@/app/actions/storage-actions';
 
 interface ContractDetailProps {
     contract: Contract;
-    approvals: Approval[];
-    blockchainLogs: BlockchainLog[];
     currentUser: string;
     onApprove: (contractId: string, userId: string) => void;
     onBack: () => void;
+    walletAddress: string | null;
+    signer: JsonRpcSigner | null;
 }
 
 export function ContractDetail({
     contract,
-    approvals,
-    blockchainLogs,
     currentUser,
     onApprove,
     onBack,
+    walletAddress,
+    signer,
 }: ContractDetailProps) {
-    const approvedCount = approvals.filter(a => a.status === 'approved').length;
-    const currentUserApproval = approvals.find(a => a.userId === currentUser);
+    const approvals = contract.approvals || [];
+    const blockchainLogs: BlockchainLog[] = []; // Implement if needed
+    const approvedCount = approvals.filter((a: Approval) => a.status === 'approved').length;
+    const currentUserApproval = approvals.find((a: Approval) => a.userId === currentUser);
     const canApprove = currentUserApproval && currentUserApproval.status === 'pending' && contract.status === 'pending';
 
-    const handleApprove = () => {
-        if (canApprove) {
+    const [isSigning, setIsSigning] = useState(false);
+
+    const handleApprove = async () => {
+        if (!canApprove) return;
+
+        if (contract.contractMode === 'onchain') {
+            if (!signer || !walletAddress) {
+                alert("Please connect your wallet first for On-Chain approval");
+                return;
+            }
+
+            setIsSigning(true);
+            try {
+                // In a real app, you would call a smart contract method here
+                // For this demo, we'll sign the document hash or a message
+                const message = `Approving Contract: ${contract.title}\nID: ${contract.id}\nHash: ${contract.documents?.[0]?.fileHash || 'N/A'}`;
+                const signature = await signer.signMessage(message);
+
+                console.log("On-chain signature successful:", signature);
+
+                // Proceed with database update
+                onApprove(contract.id, currentUser);
+                alert("On-chain approval recorded successfully!");
+            } catch (err: any) {
+                console.error("Blockchain signing failed:", err);
+                alert("Signing failed: " + (err.reason || err.message));
+            } finally {
+                setIsSigning(false);
+            }
+        } else {
+            // Off-chain mode: Simple database update
             onApprove(contract.id, currentUser);
         }
     };
@@ -45,7 +79,7 @@ export function ContractDetail({
                         <h2 className="text-xl font-semibold text-gray-900">{contract.title}</h2>
                         <p className="text-sm text-gray-500 mt-1">Contract ID: {contract.id}</p>
                     </div>
-                    {contract.status === 'approved' ? (
+                    {contract.status === 'completed' ? (
                         <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
                             <CheckCircle size={16} />
                             Approved
@@ -74,7 +108,7 @@ export function ContractDetail({
                                 <div>
                                     <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Mode</label>
                                     <p className="mt-1 text-sm text-gray-900 capitalize">
-                                        {contract.mode === 'onchain' ? 'On Chain' : 'Off Chain'}
+                                        {contract.contractMode === 'onchain' ? 'On Chain' : 'Off Chain'}
                                     </p>
                                 </div>
                                 <div>
@@ -108,7 +142,7 @@ export function ContractDetail({
                             </div>
                             <div className="w-full bg-gray-200 rounded-full h-3">
                                 <div
-                                    className={`h-3 rounded-full transition-all ${contract.status === 'approved' ? 'bg-green-500' : 'bg-blue-500'
+                                    className={`h-3 rounded-full transition-all ${contract.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
                                         }`}
                                     style={{ width: `${Math.min((approvedCount / contract.threshold) * 100, 100)}%` }}
                                 />
@@ -117,7 +151,7 @@ export function ContractDetail({
 
                         {/* Approver List */}
                         <div className="space-y-2">
-                            {approvals.map((approval) => (
+                            {approvals.map((approval: Approval) => (
                                 <div
                                     key={approval.userId}
                                     className={`flex items-center justify-between p-3 rounded-md border ${approval.status === 'approved'
@@ -139,10 +173,10 @@ export function ContractDetail({
                                             )}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">{approval.userName}</p>
-                                            {approval.timestamp && (
+                                            <p className="text-sm font-medium text-gray-900">{approval.user?.fullName}</p>
+                                            {approval.approvedAt && (
                                                 <p className="text-xs text-gray-500">
-                                                    Approved on {format(approval.timestamp, "PPP")}
+                                                    Approved on {format(new Date(approval.approvedAt), "PPP")}
                                                 </p>
                                             )}
                                         </div>
@@ -162,9 +196,20 @@ export function ContractDetail({
                             <div className="mt-6 pt-6 border-t border-gray-200">
                                 <button
                                     onClick={handleApprove}
-                                    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+                                    disabled={isSigning}
+                                    className={`w-full px-4 py-2.5 rounded-md text-white transition-colors font-medium flex items-center justify-center gap-2 ${contract.contractMode === 'onchain'
+                                        ? 'bg-indigo-600 hover:bg-indigo-700'
+                                        : 'bg-blue-600 hover:bg-blue-700'
+                                        } disabled:bg-gray-400`}
                                 >
-                                    Approve Contract
+                                    {isSigning ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            Signing on Blockchain...
+                                        </>
+                                    ) : (
+                                        contract.contractMode === 'onchain' ? 'Sign & Approve (On-Chain)' : 'Approve Contract'
+                                    )}
                                 </button>
                             </div>
                         )}
@@ -173,6 +218,41 @@ export function ContractDetail({
 
                 {/* Sidebar */}
                 <div className="space-y-6">
+                    {/* Attached Documents */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <FileText size={16} className="text-gray-400" />
+                            <h3 className="text-sm font-medium text-gray-900">Attached Documents</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {contract.documents && contract.documents.length > 0 ? (
+                                contract.documents.map((doc: any) => (
+                                    <div key={doc.id} className="flex items-center justify-between group">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <FileText size={14} className="text-blue-500 shrink-0" />
+                                            <span className="text-sm text-gray-700 truncate">{doc.fileName}</span>
+                                        </div>
+                                        <button
+                                            onClick={async () => {
+                                                const result = await getDocumentUrl(doc.storagePath);
+                                                if (result.success && result.url) {
+                                                    window.open(result.url, '_blank');
+                                                } else {
+                                                    alert('Failed to get download URL');
+                                                }
+                                            }}
+                                            className="text-xs text-blue-600 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            View
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p className="text-xs text-gray-500">No documents attached</p>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Stats */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div className="flex items-center gap-2 mb-4">
@@ -206,7 +286,7 @@ export function ContractDetail({
                         <div className="flex items-center gap-2 mb-4">
                             <Activity size={16} className="text-gray-400" />
                             <h3 className="text-sm font-medium text-gray-900">
-                                {contract.mode === 'onchain' ? 'Blockchain Activity' : 'Activity Log'}
+                                {contract.contractMode === 'onchain' ? 'Blockchain Activity' : 'Activity Log'}
                             </h3>
                         </div>
                         <div className="space-y-3">
@@ -219,7 +299,7 @@ export function ContractDetail({
                                             <p className="text-xs text-gray-500 mt-0.5">
                                                 {format(log.timestamp, "PP pp")}
                                             </p>
-                                            {contract.mode === 'onchain' && (
+                                            {contract.contractMode === 'onchain' && (
                                                 <p className="text-xs text-gray-400 mt-1 font-mono truncate">
                                                     {log.txHash}
                                                 </p>

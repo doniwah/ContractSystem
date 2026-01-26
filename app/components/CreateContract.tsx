@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Plus, X } from 'lucide-react';
-import type { ContractMode, Contract, Approval } from '../page';
+import type { ContractMode, Contract, Approval } from '../types';
 
 interface CreateContractProps {
     mode: ContractMode;
     onSubmit: (
-        contract: Omit<Contract, 'id' | 'createdAt' | 'status'>,
-        approvers: Omit<Approval, 'contractId' | 'status' | 'timestamp'>[]
+        contract: Omit<Contract, 'id' | 'createdAt' | 'status' | 'updatedAt'>,
+        approvers: { userId: string }[],
+        file: File | null
     ) => void;
     onCancel: () => void;
 }
@@ -24,6 +25,13 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
     const [description, setDescription] = useState('');
     const [threshold, setThreshold] = useState(3);
     const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
+    const [file, setFile] = useState<File | null>(null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+        }
+    };
 
     const handleAddApprover = (userId: string) => {
         if (selectedApprovers.length < 5 && !selectedApprovers.includes(userId)) {
@@ -57,19 +65,19 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
             return;
         }
 
-        const contract: Omit<Contract, 'id' | 'createdAt' | 'status'> = {
+        const contract: Omit<Contract, 'id' | 'createdAt' | 'status' | 'updatedAt'> = {
             title,
             description,
-            mode,
+            contractMode: mode,
             threshold,
         };
 
         const approvers = selectedApprovers.map(userId => ({
             userId,
-            userName: availableUsers.find(u => u.id === userId)?.name || '',
         }));
 
-        onSubmit(contract, approvers);
+        // Pass the file separately to handle upload
+        onSubmit(contract, approvers, file);
     };
 
     const availableToAdd = availableUsers.filter(u => !selectedApprovers.includes(u.id));
@@ -137,6 +145,47 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
                         <p className="text-xs text-gray-500 mt-1">
                             Contract will be approved when {threshold} out of {selectedApprovers.length || 0} approvers confirm
                         </p>
+                    </div>
+
+                    {/* Document Upload */}
+                    <div className="bg-blue-50/50 p-6 rounded-lg border-2 border-dashed border-blue-100">
+                        <label className="block text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                            <Plus size={18} />
+                            Contract Document (PDF/Image)
+                        </label>
+                        <div className="flex flex-col items-center">
+                            <input
+                                type="file"
+                                id="file-upload"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                accept=".pdf,image/*"
+                            />
+                            <label
+                                htmlFor="file-upload"
+                                className="w-full flex flex-col items-center justify-center cursor-pointer py-4 hover:bg-blue-100/50 transition-colors rounded-lg"
+                            >
+                                {file ? (
+                                    <div className="flex items-center gap-2 text-blue-700 font-medium">
+                                        <FileText size={20} />
+                                        <span>{file.name}</span>
+                                        <X
+                                            size={16}
+                                            className="ml-2 hover:text-red-500"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setFile(null);
+                                            }}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="text-center">
+                                        <p className="text-sm text-blue-600 font-medium">Click to upload or drag and drop</p>
+                                        <p className="text-xs text-blue-400 mt-1">PDF, PNG, JPG (max. 10MB)</p>
+                                    </div>
+                                )}
+                            </label>
+                        </div>
                     </div>
 
                     {/* Selected Approvers */}

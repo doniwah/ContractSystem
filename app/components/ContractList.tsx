@@ -1,18 +1,17 @@
 import { Eye, CheckCircle, Clock } from 'lucide-react';
 import { format } from "date-fns";
-import type { Contract, Approval } from '../page';
+import type { Contract } from '../types';
 
 interface ContractListProps {
     contracts: Contract[];
-    approvals: Approval[];
     onViewContract: (contractId: string) => void;
 }
 
-export function ContractList({ contracts, approvals, onViewContract }: ContractListProps) {
-    const getApprovalProgress = (contractId: string, threshold: number) => {
-        const contractApprovals = approvals.filter(a => a.contractId === contractId);
+export function ContractList({ contracts, onViewContract }: ContractListProps) {
+    const getApprovalProgress = (contract: Contract) => {
+        const contractApprovals = contract.approvals || [];
         const approvedCount = contractApprovals.filter(a => a.status === 'approved').length;
-        return { approvedCount, totalCount: contractApprovals.length, threshold };
+        return { approvedCount, totalCount: contractApprovals.length, threshold: contract.threshold };
     };
 
     return (
@@ -57,7 +56,7 @@ export function ContractList({ contracts, approvals, onViewContract }: ContractL
                             </tr>
                         ) : (
                             contracts.map((contract) => {
-                                const { approvedCount, totalCount, threshold } = getApprovalProgress(contract.id, contract.threshold);
+                                const { approvedCount, totalCount, threshold } = getApprovalProgress(contract);
                                 return (
                                     <tr key={contract.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
@@ -67,7 +66,7 @@ export function ContractList({ contracts, approvals, onViewContract }: ContractL
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
-                                            {contract.status === 'approved' ? (
+                                            {contract.status === 'completed' ? (
                                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                                     <CheckCircle size={12} />
                                                     Approved
@@ -86,7 +85,7 @@ export function ContractList({ contracts, approvals, onViewContract }: ContractL
                                             <div className="flex items-center gap-2">
                                                 <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[120px]">
                                                     <div
-                                                        className={`h-2 rounded-full ${contract.status === 'approved' ? 'bg-green-500' : 'bg-blue-500'
+                                                        className={`h-2 rounded-full ${contract.status === 'completed' ? 'bg-green-500' : 'bg-blue-500'
                                                             }`}
                                                         style={{ width: `${(approvedCount / threshold) * 100}%` }}
                                                     />

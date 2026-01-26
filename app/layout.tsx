@@ -6,6 +6,8 @@ export const metadata: Metadata = {
     description: "Digital Contract Approval System",
 };
 
+import { Providers } from "./components/Providers";
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -13,7 +15,10 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body>
+                <Providers>{children}</Providers>
+            </body>
         </html>
     );
 }
+
