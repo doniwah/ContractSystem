@@ -18,6 +18,14 @@ export interface Approval {
     user?: User | null;
 }
 
+export interface BlockchainProof {
+    id: string;
+    contractId: string | null;
+    transactionHash: string;
+    networkName?: string | null;
+    provenAt: Date;
+}
+
 export interface Contract {
     id: string;
     title: string;
@@ -31,6 +39,7 @@ export interface Contract {
     creator?: User | null;
     approvals?: Approval[];
     documents?: any[];
+    proofs?: BlockchainProof[];
 }
 
 export interface BlockchainLog {

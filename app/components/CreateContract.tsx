@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, FileText, Search } from 'lucide-react';
 import type { ContractMode, Contract, Approval } from '../types';
 
 interface CreateContractProps {
     mode: ContractMode;
+    users: { id: string; fullName: string; email: string }[];
     onSubmit: (
         contract: Omit<Contract, 'id' | 'createdAt' | 'status' | 'updatedAt'>,
         approvers: { userId: string }[],
@@ -12,20 +13,14 @@ interface CreateContractProps {
     onCancel: () => void;
 }
 
-const availableUsers = [
-    { id: 'user-1', name: 'Alice Johnson' },
-    { id: 'user-2', name: 'Bob Smith' },
-    { id: 'user-3', name: 'Charlie Davis' },
-    { id: 'user-4', name: 'Diana Martinez' },
-    { id: 'user-5', name: 'Eve Wilson' },
-];
-
-export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps) {
+export function CreateContract({ mode, users, onSubmit, onCancel }: CreateContractProps) {
+    const availableUsers = users.map(u => ({ id: u.id, name: u.fullName }));
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [threshold, setThreshold] = useState(3);
     const [selectedApprovers, setSelectedApprovers] = useState<string[]>([]);
     const [file, setFile] = useState<File | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -36,9 +31,9 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
     const handleAddApprover = (userId: string) => {
         if (selectedApprovers.length < 5 && !selectedApprovers.includes(userId)) {
             setSelectedApprovers([...selectedApprovers, userId]);
-            // Adjust threshold if needed
+            // Threshold should stay at 3 minimum, but adjust down if it exceeds available approvers
             if (threshold > selectedApprovers.length + 1) {
-                setThreshold(selectedApprovers.length + 1);
+                setThreshold(Math.max(3, selectedApprovers.length + 1));
             }
         }
     };
@@ -80,9 +75,11 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
         onSubmit(contract, approvers, file);
     };
 
-    const availableToAdd = availableUsers.filter(u => !selectedApprovers.includes(u.id));
+    const availableToAdd = availableUsers
+        .filter(u => !selectedApprovers.includes(u.id))
+        .filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const maxThreshold = Math.min(5, selectedApprovers.length);
-    const minThreshold = 3;
+    const minThreshold = 3; // Always minimum 3
 
     return (
         <div className="max-w-3xl">
@@ -218,20 +215,47 @@ export function CreateContract({ mode, onSubmit, onCancel }: CreateContractProps
                             <p className="text-sm text-gray-500 mb-3">No approvers selected yet</p>
                         )}
 
-                        {selectedApprovers.length < 5 && availableToAdd.length > 0 && (
-                            <div className="space-y-2">
-                                <p className="text-xs font-medium text-gray-600 mb-2">Available Users:</p>
-                                {availableToAdd.map(user => (
-                                    <button
-                                        key={user.id}
-                                        type="button"
-                                        onClick={() => handleAddApprover(user.id)}
-                                        className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-full text-left"
-                                    >
-                                        <Plus size={16} className="text-gray-400" />
-                                        <span className="text-sm text-gray-700">{user.name}</span>
-                                    </button>
-                                ))}
+                        {selectedApprovers.length < 5 && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-xs font-medium text-gray-600">Available Users:</p>
+                                    <span className="text-xs text-gray-500">
+                                        {availableToAdd.length} {availableToAdd.length === 1 ? 'user' : 'users'}
+                                    </span>
+                                </div>
+
+                                {/* Search Input */}
+                                <div className="relative">
+                                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                {/* Users List */}
+                                {availableToAdd.length > 0 ? (
+                                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                                        {availableToAdd.map(user => (
+                                            <button
+                                                key={user.id}
+                                                type="button"
+                                                onClick={() => handleAddApprover(user.id)}
+                                                className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors w-full text-left"
+                                            >
+                                                <Plus size={16} className="text-gray-400" />
+                                                <span className="text-sm text-gray-700">{user.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-gray-400 text-center py-4">
+                                        {searchQuery ? 'No users match your search' : 'All users have been added'}
+                                    </p>
+                                )}
                             </div>
                         )}
                     </div>

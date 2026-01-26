@@ -8,7 +8,7 @@ import { getDocumentUrl } from '@/app/actions/storage-actions';
 interface ContractDetailProps {
     contract: Contract;
     currentUser: string;
-    onApprove: (contractId: string, userId: string) => void;
+    onApprove: (contractId: string, userId: string, signature?: string, transactionHash?: string) => void;
     onBack: () => void;
     walletAddress: string | null;
     signer: JsonRpcSigner | null;
@@ -23,7 +23,11 @@ export function ContractDetail({
     signer,
 }: ContractDetailProps) {
     const approvals = contract.approvals || [];
-    const blockchainLogs: BlockchainLog[] = []; // Implement if needed
+    const blockchainLogs = contract.proofs?.map((p: any) => ({
+        action: 'On-Chain Approval',
+        timestamp: new Date(p.provenAt),
+        txHash: p.transactionHash
+    })) || [];
     const approvedCount = approvals.filter((a: Approval) => a.status === 'approved').length;
     const currentUserApproval = approvals.find((a: Approval) => a.userId === currentUser);
     const canApprove = currentUserApproval && currentUserApproval.status === 'pending' && contract.status === 'pending';
@@ -48,8 +52,11 @@ export function ContractDetail({
 
                 console.log("On-chain signature successful:", signature);
 
+                // Simulated transaction hash for demo (in production, this comes from a contract tx)
+                const mockTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+
                 // Proceed with database update
-                onApprove(contract.id, currentUser);
+                onApprove(contract.id, currentUser, signature, mockTxHash);
                 alert("On-chain approval recorded successfully!");
             } catch (err: any) {
                 console.error("Blockchain signing failed:", err);
@@ -290,7 +297,7 @@ export function ContractDetail({
                             </h3>
                         </div>
                         <div className="space-y-3">
-                            {blockchainLogs.map((log, index) => (
+                            {blockchainLogs.map((log: any, index: number) => (
                                 <div key={index} className="pb-3 border-b border-gray-100 last:border-0 last:pb-0">
                                     <div className="flex items-start gap-2">
                                         <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5" />

@@ -14,6 +14,7 @@ export async function getContracts() {
                     },
                 },
                 documents: true,
+                proofs: true,
             },
             orderBy: {
                 createdAt: 'desc',
@@ -61,11 +62,17 @@ export async function createContract(data: {
         return { success: true, contract };
     } catch (error) {
         console.error('Error creating contract:', error);
-        return { success: false, error: 'Failed to create contract' };
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        return { success: false, error: 'Failed to create contract: ' + (error as any)?.message };
     }
 }
 
-export async function approveContract(contractId: string, userId: string) {
+export async function approveContract(
+    contractId: string,
+    userId: string,
+    signature?: string,
+    transactionHash?: string
+) {
     try {
         await prisma.$transaction(async (tx) => {
             // 1. Update approval
@@ -78,6 +85,8 @@ export async function approveContract(contractId: string, userId: string) {
                 data: {
                     status: 'approved',
                     approvedAt: new Date(),
+                    signature: signature,
+                    transactionHash: transactionHash,
                 },
             });
 
@@ -95,6 +104,17 @@ export async function approveContract(contractId: string, userId: string) {
                 await tx.contract.update({
                     where: { id: contractId },
                     data: { status: 'completed' },
+                });
+            }
+
+            // 3. If on-chain, record to BlockchainProof
+            if (transactionHash) {
+                await tx.blockchainProof.create({
+                    data: {
+                        contractId: contractId,
+                        transactionHash: transactionHash,
+                        networkName: 'Sepolia Testnet', // For demo
+                    },
                 });
             }
         });

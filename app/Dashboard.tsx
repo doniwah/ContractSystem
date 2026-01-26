@@ -57,12 +57,12 @@ export default function Dashboard({
             const updated = await getContracts();
             setContracts(updated);
         } else {
-            alert('Failed to create contract');
+            alert(result.error || 'Failed to create contract');
         }
     };
 
-    const handleApprove = async (contractId: string, userId: string) => {
-        const result = await approveContract(contractId, userId);
+    const handleApprove = async (contractId: string, userId: string, signature?: string, transactionHash?: string) => {
+        const result = await approveContract(contractId, userId, signature, transactionHash);
         if (result.success) {
             const updated = await getContracts();
             setContracts(updated);
@@ -116,9 +116,9 @@ export default function Dashboard({
                     {currentView === 'create' && (
                         <CreateContractForm
                             mode={currentMode}
+                            users={users}
                             onSubmit={handleCreateContract}
                             onCancel={() => setCurrentView('list')}
-                        // In a real app, you'd pass users here to select from
                         />
                     )}
 
