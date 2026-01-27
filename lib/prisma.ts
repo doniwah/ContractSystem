@@ -3,7 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
 const prismaClientSingleton = () => {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/dummy' })
     const adapter = new PrismaPg(pool)
     return new PrismaClient({ adapter })
 }

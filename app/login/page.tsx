@@ -95,10 +95,6 @@ export default function LoginPage() {
                             )}
                         </button>
                     </div>
-
-                    <div className="text-center text-xs text-gray-400">
-                        Demo: alice@example.com / password123
-                    </div>
                 </form>
             </div>
         </div>
