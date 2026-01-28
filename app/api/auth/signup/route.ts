@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
                 fullName: fullName.trim(),
                 email: email.toLowerCase().trim(),
                 password: hashedPassword,
+                role: 'user', // Default role for new signups
             },
         });
 

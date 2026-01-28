@@ -11,6 +11,7 @@ model User {
   email         String    @unique
   password      String?   // Added for Credentials provider
   fullName      String    @map("full_name")
+  role          String    @default("user") // "admin" or "user"
   walletAddress String?   @map("wallet_address")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")

@@ -1,11 +1,13 @@
 export type ContractMode = 'onchain' | 'offchain';
 export type ContractStatus = 'pending' | 'completed' | 'rejected';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
+export type UserRole = 'admin' | 'user';
 
 export interface User {
     id: string;
     email: string;
     fullName: string;
+    role?: UserRole;
     walletAddress?: string | null;
 }
 

@@ -129,9 +129,85 @@ export async function approveContract(
 
 export async function getUsers() {
     try {
-        return await prisma.user.findMany();
+        return await prisma.user.findMany({
+            select: {
+                id: true,
+                email: true,
+                fullName: true,
+                role: true,
+                walletAddress: true,
+            },
+        });
     } catch (error) {
         console.error('Error fetching users:', error);
+        return [];
+    }
+}
+
+// Get contracts that need verification by a specific user
+export async function getContractsForVerification(userId: string) {
+    try {
+        const contracts = await prisma.contract.findMany({
+            where: {
+                approvals: {
+                    some: {
+                        userId: userId,
+                        status: 'pending',
+                    },
+                },
+            },
+            include: {
+                creator: true,
+                approvals: {
+                    include: {
+                        user: true,
+                    },
+                },
+                documents: true,
+                proofs: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+        return contracts;
+    } catch (error) {
+        console.error('Error fetching contracts for verification:', error);
+        return [];
+    }
+}
+
+// Get verification history for a specific user
+export async function getVerificationHistory(userId: string) {
+    try {
+        const contracts = await prisma.contract.findMany({
+            where: {
+                approvals: {
+                    some: {
+                        userId: userId,
+                        status: {
+                            in: ['approved', 'rejected'],
+                        },
+                    },
+                },
+            },
+            include: {
+                creator: true,
+                approvals: {
+                    include: {
+                        user: true,
+                    },
+                },
+                documents: true,
+                proofs: true,
+            },
+            orderBy: {
+                updatedAt: 'desc',
+            },
+        });
+        return contracts;
+    } catch (error) {
+        console.error('Error fetching verification history:', error);
         return [];
     }
 }
