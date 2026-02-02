@@ -34,6 +34,7 @@ export async function createContract(data: {
     contractMode: string;
     creatorId: string;
     approverIds: string[];
+    fee?: string; // Optional fee
 }) {
     try {
         const contract = await prisma.$transaction(async (tx) => {
@@ -44,6 +45,7 @@ export async function createContract(data: {
                     contractMode: data.contractMode,
                     threshold: data.threshold,
                     creatorId: data.creatorId,
+                    fee: data.fee,
                 },
             });
 

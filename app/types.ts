@@ -42,6 +42,7 @@ export interface Contract {
     approvals?: Approval[];
     documents?: any[];
     proofs?: BlockchainProof[];
+    fee?: string | null;
 }
 
 export interface BlockchainLog {

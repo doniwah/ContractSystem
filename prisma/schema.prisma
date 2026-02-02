@@ -72,6 +72,7 @@ model Contract {
   contractMode String   @default("onchain") @map("contract_mode") // onchain, offchain
   status      String   @default("pending") // pending, completed, rejected
   threshold   Int      @default(1)
+  fee         String?  // Fee in ETH strings to avoid precision loss
   creatorId   String?  @map("creator_id") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")

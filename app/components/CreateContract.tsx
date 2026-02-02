@@ -22,6 +22,8 @@ export function CreateContract({ mode, users, onSubmit, onCancel }: CreateContra
     const [file, setFile] = useState<File | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+    const [fee, setFee] = useState('');
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             setFile(e.target.files[0]);
@@ -60,11 +62,12 @@ export function CreateContract({ mode, users, onSubmit, onCancel }: CreateContra
             return;
         }
 
-        const contract: Omit<Contract, 'id' | 'createdAt' | 'status' | 'updatedAt'> = {
+        const contract: Omit<Contract, 'id' | 'createdAt' | 'status' | 'updatedAt'> & { fee?: string } = {
             title,
             description,
             contractMode: mode,
             threshold,
+            fee: fee || undefined,
         };
 
         const approvers = selectedApprovers.map(userId => ({
@@ -119,6 +122,27 @@ export function CreateContract({ mode, users, onSubmit, onCancel }: CreateContra
                             placeholder="Enter contract description"
                         />
                     </div>
+
+                    {/* Contract Fee (Only for On-Chain) */}
+                    {mode === 'onchain' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Contract Fee (ETH)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.000000000000000001"
+                                min="0"
+                                value={fee}
+                                onChange={(e) => setFee(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="0.00"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Users will be required to pay this fee when approving the contract on-chain.
+                            </p>
+                        </div>
+                    )}
 
                     {/* Approval Threshold */}
                     <div>

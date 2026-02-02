@@ -45,6 +45,34 @@ export function ContractDetail({
 
             setIsSigning(true);
             try {
+                // Check for Fee Payment
+                let feeTxHash = null;
+                if (contract.fee && parseFloat(contract.fee) > 0) {
+                    try {
+                        const { Contract, parseEther } = await import('ethers');
+                        const { FEE_MANAGER_ADDRESS, FEE_MANAGER_ABI } = await import('../constants/contracts');
+
+                        // Check if already paid? For now, we enforce payment on action.
+                        // Ideally we check `hasPaidFee` but let's assume if they click approve they want to pay/approve.
+
+                        const feeManager = new Contract(FEE_MANAGER_ADDRESS, FEE_MANAGER_ABI, signer);
+                        const feeWei = parseEther(contract.fee);
+
+                        console.log(`Paying fee of ${contract.fee} ETH...`);
+                        const tx = await feeManager.payFee(contract.id, { value: feeWei });
+                        console.log("Fee payment sent:", tx.hash);
+                        await tx.wait();
+                        console.log("Fee payment confirmed");
+                        feeTxHash = tx.hash;
+                    } catch (feeErr: any) {
+                        console.error("Fee payment failed:", feeErr);
+                        if (feeErr.action === "estimateGas") {
+                            throw new Error("Fee payment failed. Ensure you have enough ETH.");
+                        }
+                        throw new Error("Fee payment failed: " + (feeErr.reason || feeErr.message));
+                    }
+                }
+
                 // In a real app, you would call a smart contract method here
                 // For this demo, we'll sign the document hash or a message
                 const message = `Approving Contract: ${contract.title}\nID: ${contract.id}\nHash: ${contract.documents?.[0]?.fileHash || 'N/A'}`;
@@ -52,15 +80,15 @@ export function ContractDetail({
 
                 console.log("On-chain signature successful:", signature);
 
-                // Simulated transaction hash for demo (in production, this comes from a contract tx)
-                const mockTxHash = "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+                // Use the real fee tx hash if available, otherwise mock
+                const txHash = feeTxHash || "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
 
                 // Proceed with database update
-                onApprove(contract.id, currentUser, signature, mockTxHash);
-                alert("On-chain approval recorded successfully!");
+                onApprove(contract.id, currentUser, signature, txHash);
+                alert("On-chain approval recorded successfully!" + (feeTxHash ? " Fee Paid." : ""));
             } catch (err: any) {
                 console.error("Blockchain signing failed:", err);
-                alert("Signing failed: " + (err.reason || err.message));
+                alert("Signing/Payment failed: " + (err.reason || err.message));
             } finally {
                 setIsSigning(false);
             }
@@ -123,6 +151,12 @@ export function ContractDetail({
                                     <p className="mt-1 text-sm text-gray-900">{format(contract.createdAt, "PPP")}</p>
                                 </div>
                             </div>
+                            {contract.fee && (
+                                <div>
+                                    <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Required Fee</label>
+                                    <p className="mt-1 text-sm font-medium text-blue-700">{contract.fee} ETH</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 

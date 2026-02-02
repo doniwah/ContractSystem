@@ -48,26 +48,56 @@ export function AdminDashboard({
         approvers: { userId: string }[],
         file: File | null
     ) => {
-        const result = await createContract({
-            ...contractData,
-            contractMode: currentMode,
-            creatorId: currentUser,
-            approverIds: approvers.map(a => a.userId),
-        });
+        try {
+            const result = await createContract({
+                ...contractData,
+                contractMode: currentMode,
+                creatorId: currentUser,
+                approverIds: approvers.map(a => a.userId),
+            });
 
-        if (result.success && result.contract) {
-            // Upload file if present
-            if (file) {
-                const formData = new FormData();
-                formData.append('file', file);
-                await uploadDocument(formData, result.contract.id, currentUser);
+            if (result.success && result.contract) {
+                // Upload file if present
+                if (file) {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    await uploadDocument(formData, result.contract.id, currentUser);
+                }
+
+                // If on-chain and fee is set, call Smart Contract
+                if (currentMode === 'onchain' && contractData.fee && parseFloat(contractData.fee) > 0) {
+                    if (!signer) {
+                        alert("Contract created in DB, but Wallet not connected to set Fee. Please connect wallet.");
+                    } else {
+                        try {
+                            const { Contract, parseEther } = await import('ethers');
+                            const { FEE_MANAGER_ADDRESS, FEE_MANAGER_ABI } = await import('../constants/contracts');
+
+                            const feeManager = new Contract(FEE_MANAGER_ADDRESS, FEE_MANAGER_ABI, signer);
+                            const feeWei = parseEther(contractData.fee);
+
+                            const tx = await feeManager.setFee(result.contract.id, feeWei);
+                            console.log("Setting fee...", tx.hash);
+                            await tx.wait();
+                            alert("Contract created and Fee set on-chain successfully!");
+                        } catch (err: any) {
+                            console.error("Failed to set fee on-chain:", err);
+                            alert("Contract created, BUT failed to set fee on-chain: " + (err.reason || err.message));
+                        }
+                    }
+                } else {
+                    if (result.success) alert("Contract created successfully!");
+                }
+
+                setCurrentView('list');
+                const updated = await getContracts();
+                setContracts(updated);
+            } else {
+                alert(result.error || 'Failed to create contract');
             }
-
-            setCurrentView('list');
-            const updated = await getContracts();
-            setContracts(updated);
-        } else {
-            alert(result.error || 'Failed to create contract');
+        } catch (error) {
+            console.error(error);
+            alert("An unexpected error occurred");
         }
     };
 
