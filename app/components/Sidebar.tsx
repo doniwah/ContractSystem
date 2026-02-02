@@ -36,7 +36,7 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange, 
             </div>
 
             <nav className="flex-1 p-4 overflow-y-auto">
-                {/* On Chain Section */}
+                { }
                 <div className="mb-6">
                     <p className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                         Main Workflows
@@ -77,7 +77,7 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange, 
                     )}
                 </div>
 
-                {/* Off Chain Section */}
+                { }
                 <div>
                     <button
                         onClick={() => handleModeChange('offchain')}
@@ -114,6 +114,22 @@ export function Sidebar({ currentMode, currentView, onModeChange, onViewChange, 
                         </div>
                     )}
                 </div>
+
+                {/* Admin Menu */}
+                {session?.user && (session.user as any).role === 'admin' && (
+                    <div className="mt-6">
+                        <p className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                            Admin
+                        </p>
+                        <button
+                            onClick={() => window.location.href = '/dashboard/admin/users'}
+                            className="w-full text-left px-3 py-2 rounded-md text-sm flex items-center gap-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                            <User size={16} />
+                            User Management
+                        </button>
+                    </div>
+                )}
             </nav>
 
             <div className="p-4 border-t border-gray-200 bg-gray-50/50">

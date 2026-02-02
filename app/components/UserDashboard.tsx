@@ -23,6 +23,15 @@ export function UserDashboard({ currentUser }: UserDashboardProps) {
     const [pendingContracts, setPendingContracts] = useState<any[]>([]);
     const [historyContracts, setHistoryContracts] = useState<any[]>([]);
 
+    // Save wallet to DB when connected
+    useEffect(() => {
+        if (address && currentUser) {
+            import('@/app/actions/user-actions').then(({ updateUserWallet }) => {
+                updateUserWallet(currentUser, address);
+            });
+        }
+    }, [address, currentUser]);
+
     // Load data
     useEffect(() => {
         loadData();
@@ -42,7 +51,7 @@ export function UserDashboard({ currentUser }: UserDashboardProps) {
         const result = await approveContract(contractId, userId, signature, transactionHash);
         if (result.success) {
             await loadData();
-            // Refresh both lists
+
             const pending = await getContractsForVerification(currentUser);
             setPendingContracts(pending);
             const history = await getVerificationHistory(currentUser);
@@ -63,7 +72,7 @@ export function UserDashboard({ currentUser }: UserDashboardProps) {
         loadData();
     };
 
-    // Filter contracts by mode
+
     const filteredPending = pendingContracts.filter(c => c.contractMode === currentMode);
     const filteredHistory = historyContracts.filter(c => c.contractMode === currentMode);
 

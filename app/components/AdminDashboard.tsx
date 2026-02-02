@@ -27,6 +27,15 @@ export function AdminDashboard({
     const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
     const [contracts, setContracts] = useState(initialContracts);
 
+    // Save wallet to DB when connected
+    useEffect(() => {
+        if (address && currentUser) {
+            import('@/app/actions/user-actions').then(({ updateUserWallet }) => {
+                updateUserWallet(currentUser, address);
+            });
+        }
+    }, [address, currentUser]);
+
     // Refresh data when the view changes to list
     useEffect(() => {
         if (currentView === 'list') {

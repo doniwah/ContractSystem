@@ -160,7 +160,7 @@ export default function LandingPage() {
             {/* Footer */}
             <footer className="bg-gray-900 text-gray-400 py-8">
                 <div className="max-w-7xl mx-auto px-6 text-center">
-                    <p>&copy; 2024 ContractChain. Built with Next.js, Prisma, and Ethereum.</p>
+                    <p>&copy; 2026 ContractChain.</p>
                 </div>
             </footer>
         </div>
